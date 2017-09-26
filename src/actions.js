@@ -74,11 +74,12 @@ export default function actionsFactory(config) {
         },
         newPasswordRequired: (userAttributes, requiredAttributes) => {
           reject({
+            "cognitoUser": cognitoUser,
             "userAttributes": userAttributes,
             "requiredAttributes": requiredAttributes
           });  // http://docs.aws.amazon.com/cognito/latest/developerguide/using-amazon-cognito-identity-user-pools-javascript-example-authenticating-admin-created-user.html
         }
-      ));
+      }));
     },
 
     signUp({ commit }, userInfo) {
@@ -142,21 +143,18 @@ export default function actionsFactory(config) {
     },
 
     newPasswordRequired({ commit }, payload) {
-      const cognitoUser = new CognitoUser({
-        Pool: cognitoUserPool,
-        Username: payload.username,
-      });
-
       delete payload.attributes.email_verified;
 
-      return new Promise((resolve, reject) => cognitoUser.completeNewPasswordChallenge(payload.password, payload.attributes, {
-        onSuccess: (result) => {
-          resolve(result);
-        },
-        onFailure: (error) => {
-          reject(error);
-        }
-      }));
+      return new Promise((resolve, reject) => {
+        payload.instance.completeNewPasswordChallenge(payload.password, payload.attributes, {
+          onSuccess: (result) => {
+            resolve(result);
+          },
+          onFailure: (error) => {
+            reject(error);
+          }
+        });
+      });
     },
 
     forgotPassword({ commit }, payload) {
